@@ -26,7 +26,7 @@ static constexpr int default_byte_alignment = 16;
  * backed with a vector of bytes, but the underlying
  * memory resource can be changed via the template argument.
  */
-template <typename MemoryResourceType = std::vector<std::byte>>
+template <typename MemoryResourceType = std::vector<unsigned char>>
 class Memory_Arena
 {
 public:
@@ -45,7 +45,7 @@ public:
     void resize (size_t new_size_bytes)
     {
         clear();
-        raw_data.resize (new_size_bytes, std::byte {});
+        raw_data.resize (new_size_bytes, (unsigned char) {});
     }
 
     /**
@@ -55,7 +55,7 @@ public:
     void clear() noexcept
     {
 #if DEBUG
-        std::fill (raw_data.begin(), raw_data.begin() + bytes_used, std::byte { 0xDD });
+        std::fill (raw_data.begin(), raw_data.begin() + bytes_used, (unsigned char) { 0xDD });
 #endif
         bytes_used = 0;
     }

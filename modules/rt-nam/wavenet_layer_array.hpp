@@ -36,11 +36,11 @@ struct Layer_Array
 
     RTNeural::DenseT<T, in_size, channels> rechannel; // no bias!
     Layers layers;
-    static constexpr auto num_layers = std::tuple_size_v<decltype (layers)>;
+    static constexpr auto num_layers = std::tuple_size<decltype (layers)>::value;
     RTNeural::DenseT<T, channels, head_size, has_head_bias> head_rechannel;
 
-    using Last_Layer_Type = std::remove_reference_t<decltype (std::get<std::tuple_size_v<decltype (layers)> - 1> (layers))>;
-    decltype (Last_Layer_Type::outs)& layer_outputs { std::get<std::tuple_size_v<decltype (layers)> - 1> (layers).outs };
+    using Last_Layer_Type = std::remove_reference_t<decltype (std::get<std::tuple_size<decltype (layers)>::value - 1> (layers))>;
+    decltype (Last_Layer_Type::outs)& layer_outputs { std::get<std::tuple_size<decltype (layers)>::value - 1> (layers).outs };
 
 #if RTNEURAL_USE_EIGEN
     Eigen::Matrix<T, head_size, 1> head_outputs {};
@@ -88,11 +88,13 @@ struct Layer_Array
                 head_rechannel_weights[i][j] = *(weights++);
         head_rechannel.setWeights (head_rechannel_weights);
 
-        if constexpr (has_head_bias)
+        if (has_head_bias)
         {
             std::vector<float> head_rechannel_bias (head_size);
             for (int i = 0; i < head_size; i++)
+            {
                 head_rechannel_bias[i] = *(weights++);
+            }
             head_rechannel.setBias (head_rechannel_bias.data());
         }
     }
@@ -114,9 +116,13 @@ struct Layer_Array
             {
                 static constexpr size_t index = index_t;
                 if constexpr (index == 0)
+                {
                     layer.forward (rechannel.outs, condition, head_io);
+                }
                 else
+                {
                     layer.forward (std::get<index - 1> (layers).outs, condition, head_io);
+                }
             },
             layers);
 

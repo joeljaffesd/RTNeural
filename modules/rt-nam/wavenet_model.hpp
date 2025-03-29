@@ -123,10 +123,11 @@ struct Wavenet_Model
             },
             layer_arrays);
 
+        constexpr size_t last_index = std::tuple_size<decltype(layer_arrays)>::value - 1;
 #if RTNEURAL_USE_EIGEN
-        return std::get<std::tuple_size_v<decltype (layer_arrays)> - 1> (layer_arrays).head_outputs[0] * head_scale;
+        return std::get<last_index> (layer_arrays).head_outputs[0] * head_scale;
 #elif RTNEURAL_USE_XSIMD
-        return std::get<std::tuple_size_v<decltype (layer_arrays)> - 1> (layer_arrays).head_outputs[0].get (0) * head_scale;
+        return std::get<last_index> (layer_arrays).head_outputs[0].get (0) * head_scale;
 #endif
     }
 
@@ -166,7 +167,8 @@ struct Wavenet_Model
             },
             layer_arrays);
 
-        auto& last_layer_array = std::get<std::tuple_size_v<decltype (layer_arrays)> - 1> (layer_arrays);
+        constexpr size_t last_index = sizeof...(LayerArrays) - 1;
+        auto& last_layer_array = std::get<last_index>(layer_arrays);
         for (int n = 0; n < N; ++n)
         {
 #if RTNEURAL_USE_EIGEN

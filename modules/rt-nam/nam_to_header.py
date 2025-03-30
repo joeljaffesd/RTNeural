@@ -1,0 +1,78 @@
+"""
+
+This script converts a .nam file into a C++ header file for use with RTNeural.
+
+Usage:
+python generate_model_h.py <input.nam> <output.h>
+
+"""
+
+import json
+import sys
+
+def generate_model_h(nam_file, output_file):
+    with open(nam_file, 'r') as f:
+        data = json.load(f)
+
+    layers = data['config']['layers']
+    weights = data['weights']
+
+    layer_definitions = []
+    for i, layer in enumerate(layers, start=1):
+        layer_definitions.append(f"""using Layer{i} = 
+wavenet::Layer_Array<float, 
+                     {layer['input_size']}, // input_size
+                     {layer['condition_size']}, // condition_size
+                     {layer['head_size']}, // head_size
+                     {layer['channels']}, // channels
+                     {layer['kernel_size']}, // kernel_size
+                     wavenet::Dilations<{', '.join(map(str, layer['dilations']))}>, // dilations
+                     {str(layer['head_bias']).lower()}, // head_bias
+                     wavenet::NAMMathsProvider>; // maths provider""")
+
+    layer_definitions_str = "\n\n".join(layer_definitions)
+    weights_str = ", ".join(map(str, weights))
+
+    header_content = f"""#include <vector>
+#include "RTNeural/modules/rt-nam/rt-nam.hpp"
+
+/*
+
+Usage:
+
+#include "model.h"
+
+class MyAudioApp {{
+  ModelWeights weights;
+  unsigned int ioChannels = 1, samplesPerBuffer = 1;
+  wavenet::RTWavenet<ioChannels, 
+                     samplesPerBuffer, 
+                     Layer1, 
+                     Layer2> 
+    model;
+
+  float myAudioCallback(float inputSample) {{
+    return model.model.forward(inputSample);
+  }}
+}};
+
+*/
+
+{layer_definitions_str}
+
+struct ModelWeights {{
+  std::vector<float> weights = {{ {weights_str} }};
+}};
+"""
+
+    with open(output_file, 'w') as f:
+        f.write(header_content)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage: python generate_model_h.py <input.nam> <output.h>")
+        sys.exit(1)
+
+    nam_file = sys.argv[1]
+    output_file = sys.argv[2]
+    generate_model_h(nam_file, output_file)

@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <span>
 #include <sstream>
 #include <vector>
 

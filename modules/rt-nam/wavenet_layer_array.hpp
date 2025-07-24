@@ -88,7 +88,7 @@ struct Layer_Array
                 head_rechannel_weights[i][j] = *(weights++);
         head_rechannel.setWeights (head_rechannel_weights);
 
-        if (has_head_bias)
+        if constexpr (has_head_bias)
         {
             std::vector<float> head_rechannel_bias (head_size);
             for (int i = 0; i < head_size; i++)

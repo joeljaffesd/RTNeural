@@ -19,10 +19,10 @@ def generate_model_h(nam_file, output_file):
     model_name = nam_file.split('/')[-1].split('.')[0]  # Extract the name from the input .nam file
 
     
-    # Create model-specific layer names
+    # Create generic layer names
     layer_definitions = []
     for i, layer in enumerate(layers, start=1):
-        layer_name = f"{model_name}Layer{i}"
+        layer_name = f"Layer{i}"
         layer_definitions.append(f"""using {layer_name} = 
 wavenet::Layer_Array<float, 
                      {layer['input_size']}, // input_size
@@ -53,12 +53,12 @@ class MyAudioApp {{
   unsigned int ioChannels = 1, samplesPerBuffer = 1;
   wavenet::RTWavenet<ioChannels, 
                      samplesPerBuffer, 
-                     {model_name}Layer1, 
-                     {model_name}Layer2> 
+                     Layer1, 
+                     Layer2> 
     model;
 
   float myAudioCallback(float inputSample) {{
-    return model.forward(&inputSample)[0];
+    return model.forward(inputSample);
   }}
 }};
 
